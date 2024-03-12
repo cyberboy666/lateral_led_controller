@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "WT32-ETH01")(type "KiCad")(uri "${KIPRJMOD}/lib_sch/WT32-ETH01.kicad_sym")(options "")(descr ""))
+  (lib (name "lib_sch")(type "KiCad")(uri "${KIPRJMOD}/lib_sch/lib_sch.kicad_sym")(options "")(descr ""))
+)
