@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <ArtnetETH.h>
+#include <ArtnetWiFi.h>
 #include <ESPmDNS.h>
 
 #define DEBUG_ETHERNET_WEBSERVER_PORT       Serial
@@ -10,125 +11,279 @@
 #include <Wire.h>
 #include <WebServer_WT32_ETH01.h>
 #include <Preferences.h>
+#include "Bounce2.h"
+
+#include "html_content.h"
 
 WebServer server(80);
 Preferences preferences;
-ArtnetReceiver artnet;
+ArtnetReceiver artnetEth;
+// ArtnetWiFiReceiver artnetWifi;
+Bounce debouncer = Bounce(); 
 
-// Select the IP address according to your local network
-IPAddress myIP(10, 42, 0, 101);
-IPAddress myGW(10, 42, 0, 1);
-IPAddress mySN(255, 255, 255, 0);
+const int buttonPin = 36;
+const int ledPin = 33;
+int ledState = LOW;
+bool ipReset = false;
+unsigned long currentMillis = 0;
+unsigned long lastPrintTime = 0;
+unsigned long lastLedTime = 0;
+unsigned long ledFrequency = 1;
 
+int ApConnections = 0;
+bool isWifiConnected = false;
+
+// all the config variables and there defaults defined here:
+// network settings
+String network_type = "ACCESS_POINT";
+bool eth_auto = false;
+String eth_ip = "192.168.5.100";
+String eth_gw = "192.168.1.1";
+String eth_sn = "255.255.255.0";
+bool ap_auto = true;
+String ap_ssid = "leds";
+String ap_pw = "ledsleds";
+String ap_ip = "192.168.4.1";
+String ap_gw = "192.168.4.1";
+String ap_sn = "255.255.255.0";
+bool wifi_auto = true;
+String wifi_ssid = "leds";
+String wifi_pw = "ledsleds";
+String wifi_ip = "192.168.1.101";
+String wifi_gw = "192.168.1.1";
+String wifi_sn = "255.255.255.0";
+// led settings
 String led_type = "WS2815";
 int num_outputs = 1;
 int num_leds[8];
 int frame_time = 20;
 bool use_artsync = false;
+
+
+
 String subdomain = "leds";
-CRGB leds[1865];
+CRGB leds[2000];
+int numUniverse = 0;
+uint16_t universeMask = 0;
+uint16_t expectedUniverseMask = 0;
+uint8_t universeCount = 0;
+#define DATA_PIN_0 14
+#define DATA_PIN_1 15
+#define DATA_PIN_2 2
+#define DATA_PIN_3 4
+#define DATA_PIN_4 12
+#define DATA_PIN_5 17
+#define DATA_PIN_6 5
+#define DATA_PIN_7 32
+unsigned long previousMillis = 0;
+bool haveUniverse[12] = {false};
+bool artsync_flag = false;
+int totalUniverseCount = 0;
+int frameCount = 0;
+int totalTime = 0;
+
+
 
 String boolToString(bool value) {
     return value ? "true" : "false";
 }
 
+IPAddress ipFromString(String inputString){
+  IPAddress thisIp;
+  thisIp.fromString(inputString);
+    if(!thisIp.fromString(inputString)){
+    Serial.println("from string looks bad");
+    }
+    return thisIp;  
+}
+
+String getCurrentIp(){
+    if(network_type == "ETHERNET"){
+        return ETH.localIP().toString();
+    }
+    else if(network_type == "ACCESS_POINT"){
+        return WiFi.softAPIP().toString();
+    }
+    else{
+        return WiFi.localIP().toString();
+    }
+}
+
+void WiFiEvent(WiFiEvent_t event) {
+    switch (event) {
+        case SYSTEM_EVENT_STA_CONNECTED:
+            Serial.println("Connected to Wi-Fi.");
+            isWifiConnected = true;
+            break;
+        case SYSTEM_EVENT_STA_DISCONNECTED:
+            Serial.println("Disconnected from Wi-Fi.");
+            isWifiConnected = false;
+            break;
+        case 12:
+            Serial.println("A device connected to the access point.");
+            ApConnections++;
+            break;
+        case 13:
+            Serial.println("A device disconnected from the access point.");
+            ApConnections--;
+            break;
+        default:
+            Serial.print("Unknown event. Event code: ");
+            Serial.println(event);
+            break;
+    }
+}
+
+bool isNetworkConnected(){
+    if(network_type == "ETHERNET"){
+        return WT32_ETH01_eth_connected;
+    }
+    else if(network_type == "ACCESS_POINT"){
+        return ApConnections > 0;
+    }
+    else{
+        return isWifiConnected;
+    }
+}
+
+void loadFromPreferences(){
+
+  preferences.begin("my-app", false);
+    network_type = preferences.getString("network_type", network_type);
+    eth_auto = preferences.getBool("eth_auto", eth_auto);
+    eth_ip = preferences.getString("eth_ip", eth_ip);
+    eth_sn = preferences.getString("eth_sn", eth_sn);
+    eth_gw = preferences.getString("eth_gw", eth_gw);
+    ap_auto = preferences.getBool("ap_auto", ap_auto);
+    ap_ssid = preferences.getString("ap_ssid", ap_ssid);
+    ap_pw = preferences.getString("ap_pw", ap_pw);
+    ap_ip = preferences.getString("ap_ip", ap_ip);
+    ap_sn = preferences.getString("ap_sn", ap_sn);
+    ap_gw = preferences.getString("ap_gw", ap_gw);
+    wifi_auto = preferences.getBool("wifi_auto", wifi_auto);
+    wifi_ssid = preferences.getString("wifi_ssid", wifi_ssid);
+    wifi_pw = preferences.getString("wifi_pw", wifi_pw);
+    wifi_ip = preferences.getString("wifi_ip", wifi_ip);
+    wifi_sn = preferences.getString("wifi_sn", wifi_sn);
+    wifi_gw = preferences.getString("wifi_gw", wifi_gw);
+    led_type = preferences.getString("led_type", led_type);
+    num_outputs = preferences.getInt("num_outputs", num_outputs);
+    for (int i = 0; i < 8; i++){num_leds[i] = preferences.getInt(("num_leds" + String(i)).c_str(), 0);}
+    frame_time = preferences.getInt("frame_time", frame_time);
+    use_artsync = preferences.getBool("use_artsync", use_artsync);
+  preferences.end(); // Close preferences
+}
+
+void clearPreferences(){
+
+  preferences.begin("my-app", false);
+  preferences.clear(); 
+  preferences.end(); 
+}
+
+void updateToPreferences(){
+
+  preferences.begin("my-app", false);
+    preferences.putString("network_type", network_type);
+    preferences.putBool("eth_auto", eth_auto);
+    preferences.putString("eth_ip", eth_ip);
+    preferences.putString("eth_sn", eth_sn);
+    preferences.putString("eth_gw", eth_gw);
+    preferences.putBool("ap_auto", ap_auto);
+    preferences.putString("ap_ssid", ap_ssid);
+    preferences.putString("ap_pw", ap_pw);
+    preferences.putString("ap_ip", ap_ip);
+    preferences.putString("ap_sn", ap_sn);
+    preferences.putString("ap_gw", ap_gw);
+    preferences.putBool("wifi_auto", wifi_auto);
+    preferences.putString("wifi_ssid", wifi_ssid);
+    preferences.putString("wifi_pw", wifi_pw);
+    preferences.putString("wifi_ip", wifi_ip);
+    preferences.putString("wifi_sn", wifi_sn);
+    preferences.putString("wifi_gw", wifi_gw);
+    preferences.putString("led_type", led_type);
+    preferences.putInt("num_outputs", num_outputs);
+    for (int i = 0; i < 8; i++){preferences.putInt(("num_leds" + String(i)).c_str(), num_leds[i]);}
+    preferences.putInt("frame_time", frame_time);
+    preferences.putBool("use_artsync", use_artsync);
+  preferences.end(); // Close preferences
+}
+
+String replaceInHtml(String html){
+    String current_ip = getCurrentIp();
+    html.replace("{{current_ip}}",  current_ip);
+    
+  html.replace("{{network_type}}",  network_type);
+  html.replace("{{eth_auto}}",  boolToString(eth_auto));
+  html.replace("{{eth_ip}}",  eth_ip);
+  html.replace("{{eth_gw}}",  eth_gw);
+  html.replace("{{eth_sn}}",  eth_sn);
+  html.replace("{{ap_auto}}",  boolToString(ap_auto));
+  html.replace("{{ap_ssid}}",  ap_ssid);
+  html.replace("{{ap_pw}}",  ap_pw);
+  html.replace("{{ap_ip}}",  ap_ip);
+  html.replace("{{ap_gw}}",  ap_gw);
+  html.replace("{{ap_sn}}",  ap_sn);
+  html.replace("{{wifi_auto}}",  boolToString(wifi_auto));
+  html.replace("{{wifi_ssid}}",  wifi_ssid);
+  html.replace("{{wifi_pw}}",  wifi_pw);
+  html.replace("{{wifi_ip}}",  wifi_ip);
+  html.replace("{{wifi_gw}}",  wifi_gw);
+  html.replace("{{wifi_sn}}",  wifi_sn);
+  html.replace("{{led_type}}",  led_type);
+  Serial.print("num_outputs: ");
+  Serial.print(num_outputs);
+  html.replace("{{num_outputs}}",  String(num_outputs));
+  for (int i = 0; i < 8; i++){html.replace("{{num_leds" + String(i) + "}}", String(num_leds[i]));}
+  html.replace("{{frame_time}}",  String(frame_time));
+  html.replace("{{use_artsync}}",  boolToString(use_artsync));
+  return html;
+}
+
+void updateFromServer(){
+
+network_type = server.arg("network_type");
+eth_auto = server.arg("eth_auto") == "true";
+eth_ip = server.arg("eth_ip");
+eth_gw = server.arg("eth_gw");
+eth_sn = server.arg("eth_sn");
+ap_auto = server.arg("ap_auto") == "true";
+ap_ssid = server.arg("ap_ssid");
+if((server.arg("ap_pw").length() > 7)){
+  ap_pw = server.arg("ap_pw");
+}
+ap_ip = server.arg("ap_ip");
+ap_gw = server.arg("ap_gw");
+ap_sn = server.arg("ap_sn");
+wifi_auto = server.arg("wifi_auto") == "true";
+wifi_ssid = server.arg("wifi_ssid");
+wifi_pw = server.arg("wifi_pw");
+wifi_ip = server.arg("wifi_ip");
+wifi_gw = server.arg("wifi_gw");
+wifi_sn = server.arg("wifi_sn");
+led_type = server.arg("led_type");
+num_outputs = server.arg("num_outputs").toInt();
+for (int i = 0; i < 8; i++){num_leds[i] = server.arg("num_leds" + String(i)).toInt(); }
+frame_time = server.arg("frame_time").toInt();
+use_artsync = server.arg("use_artsync") == "true";
+}
+
 void handleRoot() {
-
-  Serial.print("the current ip is ");
-  Serial.println(myIP);
-
-  // Generate the HTML form with the stored static IP
-  String html = "<html><body>";
-  html += "<h1>ETHERNET_LED_CONTROLLER SETTINGS</h1>";
-  html += "<h3>NETWORK SETTINGS</h3>";
-  html += "<form action='/submit' method='post'>";
-  html += "Static IP: <input type='text' name='ip' value='" + myIP.toString() + "'><br>";
-  html += "Subnet Mask: <input type='text' name='sn' value='" + mySN.toString() + "'><br>";
-  html += "Gateway: <input type='text' name='gw' value='" + myGW.toString() + "'><br>";
-  html += "<h3>LED SETTINGS</h3>";
-  html += "led type: <select id='led_type' name='led_type'><option value='WS2815'>WS2815</option><option value='APA102'>APA102</option></select><script>document.getElementById('led_type').value = '" + led_type + "';</script><br>";
-  int upperOutput = 1;
-  if(led_type == "WS2815"){upperOutput = 8;}
-  html += "number of parallel outputs: <select id='num_outputs' name='num_outputs'>";
-  for (int i = 1; i <= upperOutput; i++){ html += "<option value='" + String(i) + "'>" + String(i) + "</option>";}
-  html += "</select><script>document.getElementById('num_outputs').value = '" + String(num_outputs) + "';</script><br>";
-  for (int i = 0; i < num_outputs; i++){
-    html += "number of leds - output_" + String(i) + ": <input type='number' name='num_led_" + String(i) + "' value='" +  String(num_leds[i]) + "'><br>";
-  }
-  // html += "osc port: <input type='number' name='osc_port' value='" +  String(osc_port) + "'><br>";
-  html += "milliseconds until frame update: <input type='number' name='frame_time' value='" + String(frame_time) + "'><br>";
-  html += "update frame on artsync packet: <select id='use_artsync' name='use_artsync'><option value='true'>true</option><option value='false'>false</option></select><script>document.getElementById('use_artsync').value = '" + boolToString(use_artsync) + "';</script><br>";
-  html += "<input type='submit' value='Submit'>";
-  html += "</form></body></html>";
-
-  server.send(200, "text/html", html);
+  String htmlContent = replaceInHtml(index_html);
+  server.send(200, "text/html", htmlContent);
 }
 
 void handleForm() {
-  // Process form data here (set networking variables)
-  String newIPString = server.arg("ip");
-  String newSNString = server.arg("sn");
-  String newGWString = server.arg("gw");
-  String newLedType = server.arg("led_type");
-  int newNumOutputs = server.arg("num_outputs").toInt();
-  int newFrameTime = server.arg("frame_time").toInt();
-  // Serial.println("value from server: " + server.arg("use_artsync"));
-  bool newUseArtsync = server.arg("use_artsync") == "true";
-  Serial.println("reading from server: " + newUseArtsync);
-  if(newLedType == "APA102"){newNumOutputs = 1;}
-  int newNumLeds[8];
-  for (int i = 0; i < 8; i++){newNumLeds[i] = server.arg("num_led_" + String(i)).toInt(); }
   
-  // int new_osc_port = server.arg("osc_port").toInt();
-  IPAddress newIP;
-  IPAddress newSN;
-  IPAddress newGW;
+    updateFromServer();
+    updateToPreferences();
 
-  // Convert the string to an IPAddress
-  if (newIP.fromString(newIPString) && newSN.fromString(newSNString) && newGW.fromString(newGWString) ) {
-    // Save the new IPs address as a string
-    preferences.begin("my-app", false); // Open preferences with a namespace
-    preferences.putString("storedIP", newIPString);
-    preferences.putString("storedSN", newSNString);
-    preferences.putString("storedGW", newGWString);
-    preferences.putString("storedLedType", newLedType);
-    preferences.putInt("storedNumOut", newNumOutputs);
-    preferences.putBool("storedArtSync", newUseArtsync);
-    for (int i = 0; i < 8; i++){
-      preferences.putInt(("storedNumLeds" + String(i)).c_str(), newNumLeds[i]);
-      num_leds[i] = newNumLeds[i];
-      }
-    preferences.putInt("storedFrameTime", newFrameTime);
-    // preferences.putInt("storedOscPort", new_osc_port);
-    preferences.end(); // Close preferences
-
-    myIP = newIP;
-    myGW = newGW;
-    mySN = newSN;
-    led_type = newLedType;
-    num_outputs = newNumOutputs;
-    frame_time = newFrameTime;
-    use_artsync = newUseArtsync;
-    // osc_port = new_osc_port;
-    
-    // Respond with a success message
     String response_html = "";
-    response_html += "Settings updated successfully - return to <a href='http://" + myIP.toString() + "'>settings page</a>";
+    response_html += "Settings updated successfully - return to <a href='http://leds.local'>settings page</a>";
     server.send(200, "text/html", response_html);
-    ETH.config(myIP, myGW, mySN);
-  } 
-  else if(!newIP.fromString(newIPString)){
-    // Respond with an error message if the IP address is invalid
-    server.send(400, "text/html", "Invalid IP address  - return to <a href='//'>settings page</a>");
-  }
-  else if(!newSN.fromString(newSNString)){
-    // Respond with an error message if the IP address is invalid
-    server.send(400, "text/html", "Invalid Subnet Mask address - return to <a href='//'>settings page</a>");
-  }
-  else if(!newGW.fromString(newGWString)){
-    // Respond with an error message if the IP address is invalid
-    server.send(400, "text/html", "Invalid Gateway address - return to <a href='//'>settings page</a>");
-  }
+    // ETH.config(ipFromString(eth_ip), ipFromString(eth_gw), ipFromString(eth_sn));
+    delayMicroseconds(2000);
+    ESP.restart();
 }
 
 void handleNotFound()
@@ -151,69 +306,209 @@ void handleNotFound()
   server.send(404, F("text/plain"), message);
 }
 
+void buttonAndLedUpdate(){
+    
+  debouncer.update();
+  // toggle ipReset mode on long press (flashing led) and restart controller on short press, 
+    if (debouncer.rose()){
+        Serial.println("button pressed");
+      if(debouncer.previousDuration() < 2000) { // button released
+        Serial.println("-------- short press");
+        if(ipReset){
+            // delayMicroseconds(2000);
+            // network_type = "ETHERNET";
+            // updateToPreferences();
+            clearPreferences();
+        }
+        ESP.restart();
+      }
+      else{
+        Serial.println("-------- long press");
+        ipReset = !ipReset;
+      }
+    }
+
+  // flash led if in ipReset mode otherwise led off if ETH not connected and led on if connected
+  if(ipReset){
+    ledFrequency = 100;
+  }
+  else if(isNetworkConnected()){
+    ledFrequency = 1;
+  }
+  else{
+    ledFrequency = 0;
+  }
+
+  if(ledFrequency == 0){
+    digitalWrite(ledPin, 0);
+  }
+  else if(ledFrequency == 1){
+    digitalWrite(ledPin, 1);
+  }
+  else if(currentMillis - lastLedTime >= ledFrequency){
+    Serial.print("led flashing ??");
+    ledState = (ledState == LOW) ? HIGH : LOW;
+    digitalWrite(ledPin, ledState);
+    lastLedTime = currentMillis;
+  }
+}
+
+void artnetCallback(const uint32_t univ, const uint8_t* data, const uint16_t size){
+    universeMask |= (1 << univ);
+    for (size_t pixel = 0; pixel < 170; ++pixel) {
+        size_t idx = pixel * 3;
+        uint16_t offset_pixel = univ*170 + pixel;
+        leds[offset_pixel].r = data[idx + 0];
+        leds[offset_pixel].g = data[idx + 1];
+        leds[offset_pixel].b = data[idx + 2];
+    }
+}
+
+void artsyncCallback(){
+    // Serial.println("ARTSYNC");
+    artsync_flag = true;
+}
+
+void ledSetup(){
+
+  int fastled_index[8];
+  int subtotal = 0;
+  for(int i = 0; i < 8; i++){
+    fastled_index[i] = subtotal;
+    subtotal = subtotal + num_leds[i];
+  }
+  numUniverse = subtotal / 170 + 1;
+  Serial.print("the numUniverses are: ");
+  Serial.println(numUniverse);
+  expectedUniverseMask = (1 << numUniverse) - 1;
+
+  if(led_type == "WS2815"){
+      // Serial.print(i);
+      // Serial.print(" - start #: ");
+      // Serial.print(fastled_index[i]);
+      // Serial.print(" - amount #: ");
+      // Serial.print(num_leds[i]);
+    if(0 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_0>(leds, fastled_index[0], num_leds[0]);}
+    if(1 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_1>(leds, fastled_index[1], num_leds[1]);}
+    if(2 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_2>(leds, fastled_index[2], num_leds[2]);}
+    if(3 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_3>(leds, fastled_index[3], num_leds[3]);}
+    if(4 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_4>(leds, fastled_index[4], num_leds[4]);}
+    if(5 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_5>(leds, fastled_index[5], num_leds[5]);}
+    if(6 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_6>(leds, fastled_index[6], num_leds[6]);}
+    if(7 < num_outputs){FastLED.addLeds<WS2812B, DATA_PIN_7>(leds, fastled_index[7], num_leds[7]);}
+      
+  }
+  else if(led_type == "APA102"){
+    FastLED.addLeds<APA102, DATA_PIN_0, DATA_PIN_1>(leds, 0, num_leds[0]);
+  }
+}
+
 void setup()
 {
   Serial.begin(115200);
-
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+  debouncer.attach(buttonPin);
+  debouncer.interval(5); // interval in ms
   delay(4000);
   Serial.println("begin");
 
-  preferences.begin("my-app", false); // Open preferences with a namespace
-  myIP.fromString(preferences.getString("storedIP", myIP.toString()));
-  mySN.fromString(preferences.getString("storedSN", myIP.toString()));
-  myGW.fromString(preferences.getString("storedGW", myIP.toString()));
-  led_type = preferences.getString("storedLedType", led_type);
-  num_outputs = preferences.getInt("storedNumOut", num_outputs);
-  frame_time = preferences.getInt("storedFrameTime", frame_time);
-  use_artsync = preferences.getBool("storedArtSync", use_artsync);
-  for (int i = 0; i < 8; i++){num_leds[i] = preferences.getInt(("storedNumLeds" + String(i)).c_str(), 0);}
-  
-  // osc_port = preferences.getInt("storedOscPort", osc_port);
-  preferences.end(); // Close preferences
-
-  // Using this if Serial debugging is not necessary or not using Serial port
-  //while (!Serial && (millis() < 3000));
-
-  Serial.print("\nStarting WebServer on " + String(ARDUINO_BOARD));
-  Serial.println(" with " + String(SHIELD_TYPE));
-  Serial.println(WEBSERVER_WT32_ETH01_VERSION);
-
-  // To be called before ETH.begin()
+  // clearPreferences();
+  loadFromPreferences();
+  // ap_pw = "ledsleds";
   WT32_ETH01_onEvent();
+  if(network_type == "ETHERNET"){
+    // set up ethernet connection
+    ETH.begin(ETH_PHY_ADDR, ETH_PHY_POWER);
+    if(!eth_auto){ETH.config(ipFromString(eth_ip), ipFromString(eth_gw), ipFromString(eth_sn));}
+  }
+  else if(network_type == "ACCESS_POINT"){
+    WiFi.onEvent(WiFiEvent);
+    WiFi.softAP(ap_ssid, ap_pw);
+    Serial.print("ap_sn: ");
+    Serial.println(ap_sn);
+    Serial.print("ipFromString(ap_sn): ");
+    Serial.println(ipFromString(ap_sn));
+    if(!ap_auto){WiFi.softAPConfig(ipFromString(ap_ip), ipFromString(ap_gw), ipFromString(ap_sn));}
+    // while (WiFi.status() != WL_CONNECTED) {
+    //   Serial.print(".");
+    //   delay(500);
+    // }
+    Serial.print("WiFi connected, IP = ");
+    Serial.println(WiFi.softAPIP());
+    Serial.print("WiFi.status(): ");
+    Serial.println(WiFi.status());
+  }
+  else if(network_type == "WIFI"){
+    WiFi.begin(wifi_ssid, wifi_pw);
+    if(!wifi_auto){WiFi.config(ipFromString(wifi_ip), ipFromString(wifi_gw), ipFromString(wifi_sn));}
+    Serial.print("WiFi connected, IP = ");
+    Serial.println(WiFi.localIP());
+    WiFi.onEvent(WiFiEvent);
+  }
 
-  ETH.begin(ETH_PHY_ADDR, ETH_PHY_POWER);
-  ETH.config(myIP, myGW, mySN);
-
+  // WT32_ETH01_waitForConnect();
   if (!MDNS.begin(subdomain)) {
     Serial.println("Error setting up mDNS");
   }
-
-  WT32_ETH01_waitForConnect();
 
   server.on(F("/"), handleRoot);
   server.on("/submit", HTTP_POST, handleForm);
   server.onNotFound(handleNotFound);
   server.begin();
 
-//  MDNS.addService("http", "tcp", 80);
-
-
   Serial.print(F("HTTP EthernetWebServer is @ IP : "));
   Serial.println(ETH.localIP());
+
+  ledSetup();
+  artnetEth.begin();
+  artnetEth.verbose(true);
+  artnetEth.subscribe(artnetCallback);
+  if(use_artsync){artnetEth.subscribeArtsync(artsyncCallback);}
+
+  
+  
 }
 
 void loop()
 {
-  server.handleClient();
-  // MDNS.update();
-  
-    Serial.print("led_type is ");
-    Serial.println(led_type);
-    Serial.print("num_outputs is ");
-    Serial.println(num_outputs);
-    Serial.print("use_artsync is ");
-    Serial.println(use_artsync);
-    
-    delay(2000);
+    currentMillis = millis();
+    server.handleClient();
+    buttonAndLedUpdate();
+    // MDNS.update();
+    universeMask = 0;
+    universeCount = 0;
+
+    while(true){
+        artnetEth.parse();
+        if (universeMask == expectedUniverseMask || artsync_flag) { break; }
+        if (millis() - currentMillis >= frame_time) { break; }
+    }
+    for (int i = 0; i < 12; i++) {
+        if (universeMask & (1 << i)) {
+            universeCount++;
+        }
+    }
+
+    artsync_flag = false;
+    frameCount++;
+    totalUniverseCount = totalUniverseCount + universeCount;
+    // Serial.println("complete frame - updating leds");
+    FastLED.show();
+
+    if(frameCount % 500 == 0){
+        Serial.print("current IP is: ");
+        Serial.println(getCurrentIp());
+        float result = float(totalUniverseCount) / frameCount;
+        Serial.print("average number universes collected: ");
+        Serial.print(result);
+        Serial.print(" - average frame time: ");
+        float time = float(millis() - totalTime) / frameCount;
+        Serial.println(time);
+        frameCount = 0;
+        totalUniverseCount = 0;
+        totalTime = millis();
+    }
 
 }

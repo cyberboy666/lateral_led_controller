@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Dropdown</title>
+</head>
+<body>
+
+<select id="mainSelect" onchange="updateOptions()">
+  <option value="1">Option 1</option>
+  <option value="2">Option 2</option>
+</select>
+
+<select id="dependentSelect">
+  <!-- Options will be dynamically added here -->
+</select>
+
+<script>
+function updateOptions() {
+  var mainSelect = document.getElementById("mainSelect");
+  var dependentSelect = document.getElementById("dependentSelect");
+
+  // Clear existing options
+  dependentSelect.innerHTML = "";
+
+  if (mainSelect.value === "1") {
+    // Add options for selection 1
+    var option1 = document.createElement("option");
+    option1.text = "Option A";
+    dependentSelect.add(option1);
+
+    var option2 = document.createElement("option");
+    option2.text = "Option B";
+    dependentSelect.add(option2);
+  } else if (mainSelect.value === "2") {
+    // Add options for selection 2
+    var option3 = document.createElement("option");
+    option3.text = "Option X";
+    dependentSelect.add(option3);
+
+    var option4 = document.createElement("option");
+    option4.text = "Option Y";
+    dependentSelect.add(option4);
+
+    var option5 = document.createElement("option");
+    option5.text = "Option Z";
+    dependentSelect.add(option5);
+  }
+}
+</script>
+
+</body>
+</html>

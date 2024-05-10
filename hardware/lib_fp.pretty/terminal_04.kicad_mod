@@ -29,8 +29,13 @@
   (pad "3" thru_hole circle (at 7.62 5.0038) (size 2 2) (drill 1.3) (layers "*.Cu" "*.Mask") (tstamp 7fbd7691-5f8c-4c52-8bf2-4fa1ed08ccd5))
   (pad "4" thru_hole circle (at 11.43 0) (size 2 2) (drill 1.3) (layers "*.Cu" "*.Mask") (tstamp 4dc98cb5-e89e-4c49-8496-b99edeb5ab68))
   (pad "4" thru_hole circle (at 11.43 5.0038) (size 2 2) (drill 1.3) (layers "*.Cu" "*.Mask") (tstamp 8c8fb900-7bbb-476f-a178-715161c75ae8))
-  (model "${KICAD6_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_2x02_P2.54mm_Vertical.wrl"
+  (model "${KICAD6_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_2x02_P2.54mm_Vertical.wrl" hide
     (offset (xyz 0 0 0))
+    (scale (xyz 1 1 1))
+    (rotate (xyz 0 0 0))
+  )
+  (model "/home/timcaldwell/projects/kicad-3dmodels/spring_terminals/DG141R-4-2.54.step"
+    (offset (xyz 0.5 -9.5 13.5))
     (scale (xyz 1 1 1))
     (rotate (xyz 0 0 0))
   )

@@ -207,7 +207,7 @@
       (net 5 "Net-(J2-Pin_4)") (pinfunction "Pin_4") (pintype "passive") (tstamp 107188c7-6b14-48a2-905f-91efc01bdced))
     (pad "4" thru_hole circle (at 11.43 5.0038) (size 2 2) (drill 1.3) (layers "*.Cu" "*.Mask")
       (net 5 "Net-(J2-Pin_4)") (pinfunction "Pin_4") (pintype "passive") (tstamp 23d7f16e-247e-4f01-b22b-0606bbe3ac27))
-    (model "${KICAD6_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_2x02_P2.54mm_Vertical.wrl"
+    (model "${KICAD6_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_2x02_P2.54mm_Vertical.wrl" hide
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))

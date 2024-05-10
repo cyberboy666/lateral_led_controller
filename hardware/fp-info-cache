@@ -1,4 +1,4 @@
-5108128222610
+8562532466797
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -92505,11 +92505,25 @@ varistor
 2
 2
 lib_fp
+MP1584EN_stepdown_module
+
+
+0
+12
+4
+lib_fp
+RJ45_Horizontal
+8 Pol Shallow Latch Connector, Modjack, RJ45 (https://cdn.amphenol-icc.com/media/wysiwyg/files/drawing/c-bmj-0102.pdf)
+RJ45
+0
+16
+8
+lib_fp
 WT32-ETH01
 
 
 0
-26
+52
 26
 lib_fp
 terminal_02
