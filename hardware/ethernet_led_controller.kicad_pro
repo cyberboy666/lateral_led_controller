@@ -443,7 +443,7 @@
       "netlist": "",
       "specctra_dsn": "",
       "step": "",
-      "vrml": ""
+      "vrml": "ethernet_led_controller.wrl"
     },
     "page_layout_descr_file": ""
   },
