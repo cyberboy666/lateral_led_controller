@@ -81,9 +81,44 @@ we ended up using a switching power supply [like this](https://www.aliexpress.co
 
 ![image](https://github.com/user-attachments/assets/a14c4c9a-6c22-4981-a39e-36884a5f9992)
 
+## light diffusers
+
+for most installation settings it is prefered to use some kind of diffuser to help to evenly distribute light. there are many options and information about this topic online
+
+## wiring and connectors
+
+the data lines from _lateral_led_controller_ uses Pluggable Screw Terminals - standard wire (22awg etc) can connect these lines from controller to the strip
+
+![image](https://github.com/user-attachments/assets/4b82d6b9-e639-4413-a254-619010723e6c)
+
+theres also the option to use cat5/6 cables to carry multiple data lines from the _lateral_led_controller_ - these are quite cheap, come in long distances and have twisted pairs which should allow for longer runs
+
+![image](https://github.com/user-attachments/assets/211844cf-94b4-4366-baef-74deefd615ba)
+
+
+i like the idea of running power lines seperately (on [red+black paired wire](https://www.aliexpress.com/item/4000625095039.html) ) - and using [these kinds](https://www.aliexpress.com/item/1005004267277214.html) of barrel / screw connectors to easily plug in / unplug the installation
+
+![image](https://github.com/user-attachments/assets/a575ffa4-9df2-4658-974c-fc0e0b74afea)
+
+most led strips come with these [SM JST 4](https://www.aliexpress.com/item/1005002516911742.html?) connectors pre-soldered to both ends. one option if you dont want to resolder wires / new connectors onto each strip would be to just get some extra of these and create breakouts 
+
+![image](https://github.com/user-attachments/assets/95455f20-8f90-485b-b1c4-b9bf2ced58d4)
+
+
 </details>
 
 ## software options
+
+<details><summary>software options</summary>
+
+any software that can output artnet over a network can be used with _lateral_led_controller_. some programs i have tested it with include:
+
+- my [artnet_led_mapper](https://github.com/cyberboy666/artnet_led_mapper) application
+- [resolume](https://resolume.com/)
+- [touch designer](https://derivative.ca/UserGuide/TouchDesigner)
+- [QLC+](https://www.qlcplus.org/)
+
+</details>
 
 ---
 
