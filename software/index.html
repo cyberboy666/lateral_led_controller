@@ -103,9 +103,7 @@
 <body onload="init_function()">
 
     <form action='/submit' method='post'>
-        <h1>LATERAL_LEDS_CONTROLLER</h1>
-
-        <img src="info_labels.svg" alt="Diagram showing board connections" class="diagram">
+        <h1>LATERAL_LED_CONTROLLER</h1>
 
         <h2>Network Settings</h2>
         Controller IP Address: <input type='text' name='current_ip' value='{{current_ip}}' readonly><br>
@@ -170,11 +168,11 @@
             </div>
         </div>
         <h2>LED SETTINGS</h2>
-        <img src="info_pcb.svg" alt="Diagram showing the physical board" class="diagram">
+
         Select your LED strip model.
-        <p class="note"> WS281x family LEDs, when running 200+ pixels on a single line will begin to suffer framerate
-            bottlenecks.</p>
-        <p class="note"> APA102 family strips need to be connected to the first two data lines but there is no
+        <p class="note"> <b>WS281X/neo_pixel</b> family LEDs, when running 200+ pixels on a single data line will begin to suffer framerate
+            bottlenecks - can output up to 8 parallel data lines to overcome this.</p>
+        <p class="note"> <b>APA102/dot_star</b> family strips need to be connected to the first two data lines but there is no
             bottleneck and no need
             to split them across multiple data lines. </p>
         LED Type:
@@ -243,7 +241,7 @@
 
     h1 {
         text-align: center;
-        color: #2CFF00;
+        /* color: #2CFF00; */
 
     }
 
