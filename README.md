@@ -199,7 +199,8 @@ follow this link to view the [interactive BOM](https://htmlpreview.github.io/?ht
   
 <details><summary><b>operating guide</b> - start here if you have purchased an assembled unit</summary>
 
-[diagram of the circuit with labels here]
+![image](https://github.com/user-attachments/assets/9b6dc6d6-f663-428f-ba4e-906b9d6d9f68)
+
 
 ## access settings interface for first time
 
@@ -255,7 +256,8 @@ Ask any questions or start discussions related to this project on the [scanlines
 You can contact me directly at tim (at) cyberboy666 (dot) com 
 Please get in touch if you are interested in hosting a workshop !
 
-[image of the booklet back here]
+![image](https://github.com/user-attachments/assets/9879806e-2057-46f2-97a5-5c3c61af2ddf)
+
 
 thanks to Tor for user testing + detailed feedback and suggestions + help with web interface design. thanks to the Lateral Movement Crew: Leo, Teesh, Wendy, Luke, Sean - for all the work into making these parties happen
 
