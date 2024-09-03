@@ -1,71 +1,50 @@
-# ethernet_led_controller
+# lateral_led_controller
 
-WIP
+### hardware network controller for addressable led installations 
 
-## getting started:
+![image](https://github.com/user-attachments/assets/b56ed530-bede-486a-a84b-ba3950885025)
 
-### powering the controller
+- this circuit is distributed by __UNDERSCORES__ - _an open video hardware label_ : it is available to purchase - as a pcb, kit or assembled unit - at [underscores.shop](https://underscores.shop/lateral_led_controller/)
+- the schematic for the circuit can be found [here](/hardware/schematic.pdf)
+- the pcb gerber files for the lastest version can be found [here](/hardware/gerber_latest.zip)
+- interactive BOM is [here](https://htmlpreview.github.io/?https://github.com/cyberboy666/lateral_led_controller/blob/main/hardware/bom/ibom.html)
+- consider [donating](https://opencollective.com/underscores) to the underscores project to help us continue creating for the commons
 
-this circuit needs 5v to run. there are a few different ways you can send power to this controller:
+## description
 
-- 5v over __2.1 barrel_jack__ (centre positive) - ensure the _power_input_select_ jumper is set to the left (this bypasses stepdown module - actually shouldnt matter if set to right sending 5v to stepdown should work and not be dangerous)
-- 5v over __power terminal block__ (top = GND, bottom = 5v ) - ensure the _power_input_select_ jumper is set to the left...
-- 12v over __2.1 barrel jack__ (centre positive) - ensure the __power_input_select__ jumper is set to the RIGHT - __important! this could fry mcu if sending 12v directly to it!__
-- 12v over __power terminal block__ (top = GND, bottom = 12v ) - ensure the _power_input_select_ jumper is set to the RIGHT... __important! this could fry mcu if sending 12v directly to it!__
+_lateral_led_controller_ is a hardware interface that converts [Art-Net](https://art-net.org.uk/), a network protocol for transmitting DMX data over network, into signals that drive addressable LEDs. it can be combined with mapping software (such as my [artnet_led_mapper](https://github.com/cyberboy666/artnet_led_mapper/)) to send arbitrary video onto an led strip canvas
 
-### WeMos_USB_to_SERIAL
+features include:
 
-on top middle of board there is 6 pins which can be connected to the __WeMos_USB_to_SERIAL__ adapter that comes with this circuit (micro-usb port facing up). this is useful for:
+- receives artnet data via ETHERNET, WIFI or ACCESS_POINT
+- natively drive addressable leds [WS281X](https://www.aliexpress.com/item/4001322411818.html) and [APA102](https://www.aliexpress.com/item/32322326979.html)
+- supports up to `8` parallel data outs and up to `12` DMX universes for max control over `2000` leds !
+- local web interface for easily configuring network / led settings
+- flexible dc power input - between 5v to 12v with low-heat / efficient on-board step-down converter
+- open source hardware and firmware - can be customized to meet your specific needs
 
-- updating the firmware on the micro controller
-- monitoring the serial console for debugging
+## background
 
-if you are not doing either of these things it is recommended to remove the serial module from the board.
+this controller is a companion to my [artnet_led_mapper](https://github.com/cyberboy666/artnet_led_mapper/) application that converts a video feed into artnet for addressable led strip installations. it was built for [lateral movement](https://cyberboy666.com/lateralmovement/) club nights such as seen here:
 
-if you are using the serial monitor there is another jumper ( _power over serial_ ) to select whether the board should:
+![image](http://underscores.shop/wp-content/uploads/2024/06/leds.gif)
 
-- take 5v power directly from the micro-usb plugged into the _serial module_ - jumper set to __power over serial__ - this allows updating/monitoring the board with only 1 cable connected
-- do not take power from serial micro-usb connection - jumper set away from __power over serial__ (or not connected at all) you will need to power the board also in one of the ways listed above
 
-_when WeMos_USB_to_SERIAL module is connected and controller is running there is a known bug where ethernet will not work unless the serial_monitor is open - this is due to ETH01 boards using same pin for ethernet clock and program_low IO0_
+you can find some more background on this install and process here: [WORKS IN PROGRESS 04 - talk about controlling addressable leds for art installation](https://videos.scanlines.xyz/w/p/tUhDfYqJJPfjovscNMvFRL) 
 
-## accessing the settings interface
+## demo video
 
-this controller can connect to a network in three ways:
+[coming soon]
 
-- ETHERNET
-- WIFI
-- ACCESS_POINT
+## hardware options
 
-you can tell when it is connected because the blue NETWORK CONNECTED led will be on.
+<details><summary>hardware options</summary>
 
-the default connection mode is ACCESS_POINT (as this should be easiest to get on to in any situation)
+besides this controller there are some more bits of hardware you will need to realize an _addressable led installation_ - i will outline some suggestions here based on my experience but this will depend on your specific requirements - feel free to [email me](mailto:tim@cyberboy666.com) if you would like individual consulting on this.
 
-from a computer look for the default wifi_network name `leds` and connect to it with the default password `ledsleds`
+### led strips
 
-then you should see the blue led come on. now you are connected try accessing `http://leds.local` (also try `http://192.168.4.1` if that doesnt work )from a web-browser and you should see the config page.
-
-from here you can set up which connection mode to use, see your controllers ip and also set which led protocol & layout to use.
-
-_known issue: although it works fine from linux, i couldnt get __auto assign ethernet connection__ to work on windows - it seems like windows can not designate an ip for the controller if it does not set one itself -> maybe there is a way to fix this -> doesnt really matter tho... static ip is better in most cases anyway..._
-
-## reset button
-
-### soft reset
-
-on the controller board next to the `NETWORK CONNECTED` led is a `CONTROLLER RESET` button - pushing this will hard reboot the controller -> you should see the _network connected_ light go off for a momement while it resets
-
-### hard reset
-
-if you hold down the `CONTROLLER RESET` button for 5 seconds then release it you should see the `NETWORK CONNECTED` led flashing -> short pressing the `CONTROLLER RESET` again from this mode will perform a __hard reset__ this means that the _NETWORK TYPE_ is reset back to __ACCESS_POINT__ and all settings are restored to default (you will need to connect to `leds` with pw `ledsleds` again to set up your controller)
-
-this can be helpful if you accidently put the controller into a state with network settings that you can not access the page any more.
-
-(if you get to the flashing led state but do not want to do a hard reset just power down the controller while flashing and your settings will not be wiped)
-
-## addressing data to led strips
-
-this controller is configured to support two types of addressable led strips:
+this controller is configured to support two types of addressable led strips (more can be added by firmware update):
 
 ### __WS281X__
 
@@ -77,6 +56,8 @@ ie [neopixels](https://www.adafruit.com/product/2541),  [WS2813 (5v) or WS2815 (
 - this controller is designed to be able to address up to 8 seperate WS281X led strips in parallel (outputs D0-D7 on board) for maximum 1920 number of leds in total
 
 
+![image](https://github.com/user-attachments/assets/fd99ba35-70c5-444a-bb6a-b914387d39c2)
+
 ### __APA102__
 
 ie [dotstar](https://www.adafruit.com/product/2574) ,  [SK9822](https://www.aliexpress.com/item/32322326979.html)
@@ -87,19 +68,202 @@ ie [dotstar](https://www.adafruit.com/product/2574) ,  [SK9822](https://www.alie
 - at those speeds there is no need to have parrallel outputs can easily address 2000 leds in series (may need to look into power injection tho)
 - they also claim to draw around 1/5 of the power as WS281X (i havnt tested this myself)
 
-from the settings page you can select the _led type_:
+![image](https://github.com/user-attachments/assets/4de6dc08-b744-477d-b597-58106c115f09)
 
-if you choose WS281X then you also will have the choice to select how many parallel outputs to use and how many leds are connected to each of thoses outputs
+## power supply
 
-## data line wiring
+we ended up using a switching power supply [like this](https://www.aliexpress.com/item/1005002843829663.html) 
 
-the eight data-line outputs on the controller (D0-D7) can be connected with wire directly to the led strips using the __spring-terminal blocks__ on the pcb
+- choose voltage based on your strip type (likely to be either 5v or 12v)
+- and then power based on the requirement for total number of leds you are using
+- you should power the _lateral_led_controller_ from the same supply thats powering the leds (its designed to safely take 5v - 12v input) or atleast ensure the GNDs are connected
+- take note on the recommended power wire thickness based on how much current is passing through it (if you use 12v strips then less current is required and therefore thinner wires)
 
-(you also could use some kind of [Quick Wire Conductor](https://www.aliexpress.com/item/1005003870395163.html?) on led strip end to easily connect and disconnect the wire on both ends)
+![image](https://github.com/user-attachments/assets/a14c4c9a-6c22-4981-a39e-36884a5f9992)
 
-for longer runs you also can use the two __rj45 data jacks__ (D0-D3 and D4-D7) to easily send multiple datalines (twisted paired with GND) over a distance (long cat cables are very cheap) 
+## light diffusers
 
-there are also two types of _connector_boards_ to help with these different wiring options:
+for most installation settings it is prefered to use some kind of diffuser to help to evenly distribute light. there are many options and information about this topic online
 
-- __rj45_to_terminal_block__ : used to split out the 4 data lines on data_rj45 into individual wires
-- __terminal_block_plus_barrel_to_JST-SM__ used to combine indivial data wires + power over barrel_jack to the JST-SM connector that comes with these led strips -> can be used if you do not want to change the connector that comes with the strips
+## wiring and connectors
+
+the data lines from _lateral_led_controller_ uses Pluggable Screw Terminals - standard wire (22awg etc) can connect these lines from controller to the strip
+
+![image](https://github.com/user-attachments/assets/4b82d6b9-e639-4413-a254-619010723e6c)
+
+theres also the option to use cat5/6 cables to carry multiple data lines from the _lateral_led_controller_ - these are quite cheap, come in long distances and have twisted pairs which should allow for longer runs
+
+![image](https://github.com/user-attachments/assets/211844cf-94b4-4366-baef-74deefd615ba)
+
+
+i like the idea of running power lines seperately (on [red+black paired wire](https://www.aliexpress.com/item/4000625095039.html) ) - and using [these kinds](https://www.aliexpress.com/item/1005004267277214.html) of barrel / screw connectors to easily plug in / unplug the installation
+
+![image](https://github.com/user-attachments/assets/a575ffa4-9df2-4658-974c-fc0e0b74afea)
+
+most led strips come with these [SM JST 4](https://www.aliexpress.com/item/1005002516911742.html?) connectors pre-soldered to both ends. one option if you dont want to resolder wires / new connectors onto each strip would be to just get some extra of these and create breakouts 
+
+![image](https://github.com/user-attachments/assets/95455f20-8f90-485b-b1c4-b9bf2ced58d4)
+
+
+</details>
+
+## software options
+
+<details><summary>software options</summary>
+
+any software that can output artnet over a network can be used with _lateral_led_controller_. some programs i have tested it with include:
+
+- my [artnet_led_mapper](https://github.com/cyberboy666/artnet_led_mapper) application
+- [resolume](https://resolume.com/)
+- [touch designer](https://derivative.ca/UserGuide/TouchDesigner)
+- [QLC+](https://www.qlcplus.org/)
+
+</details>
+
+# documentation
+
+this project is fully _open-source hardware_ - all the files required to build it are included in this repo for free. if you have the time and/or skill you can contribute back by collaborating on / testing new designs, improving these docs, making demo videos/other creative content etc. you can also support the project financially by [donating](https://opencollective.com/underscores) directing, or purchasing through the [web shop](https://underscores.shop).
+
+depending on whether you are going fully diy or buying an assembled and tested unit, some of the following guides will be relavent to you. the flow would be:
+
+## ordering parts
+
+<details><summary><b>parts sourcing guide (w/ notes on pcb fabracation )</b> - start here if you are building fully from scatch or have purchased a pcb</summary>
+  
+
+i try to source all the parts i can from either:
+- [tayda](https://www.taydaelectronics.com/) ; cheaper for common parts like resistors etc, also good for mechanical parts like switches and buttons
+- [mouser](https://www.mouser.de/) ; has lots more options, speciality video ic's, can sometimes cost more (free shipping on orders over 50euros)
+- other ; ocationally there will be parts which will need to be sourced elsewhere - usaully either aliexpress, ebay or amazon etc...
+
+take a look at the [full_bom](/hardware/bom/full_bom.csv) for this project to see where i am sourcing each part from
+
+## import into tayda
+
+- go to the [tayda quick order](https://www.taydaelectronics.com/quick-order/) and in bottom corner choose _add from file_
+- select the file [tayda_bom.csv](./hardware/bom/tayda_bom.csv) in the BOM folder (you will have to download it first or clone this repo)
+- after importing select _add to cart_
+- __NOTE:__ the minimum value for resistors is 10, so you may need to modify these values to add to cart (or if they are already modified here you will need to see the  full_bom for actual part QTY) 
+
+- OPTIONAL: it is a good idea to add some dip-ic sockets and 2.54pin headers/sockets to your tayda order if you dont have them around already
+  
+## import into mouser
+
+- go to [mouser bom tool](https://nz.mouser.com/Bom/) and click _upload spreadsheet_
+- select the file [mouser_bom.csv](./hardware/bom/mouser_bom.csv) in this folder (you will have to download it first or clone this repo), then _upload my spreadsheet_ and _next_
+- ensure that __Mouser Part Number__ is selected in the dropdown above the first row, then _next_, _process_
+- if everything looks correct can now put _add to basket_
+
+## ordering pcbs
+
+you can support this project by buying individual pcbs from the [shop](https://underscores.shop). if you would rather have pcbs fabricated from gerbers directly the file you need is [here](/hardware/gerber_latest.zip)
+
+- i get my pcbs fabricated from [jlcpcb](https://cart.jlcpcb.com/quote) - 5 is the minumum order per design
+- upload the zip file with the `add gerber file` button
+- the default settings are mostly fine - set the __PCB Qty__ and __PCB Color__ settings (you can check that the file looks correct with pcb veiwer)
+- it may be best to combine orders with other pcbs you want to have fab'd since the shipping can cost more than the items - also orginising group buys is a good way to distribute the extra pcbs /costs 
+  
+i often use jlcpcb because they are reliable, cheap and give you an option of colours. remember though that the cheapest Chinese fab houses are not always the most ethical or environmently friendly - if you can afford it consider supporting local companies. 
+
+  </details>
+  
+## assembly guide
+  
+<details><summary><b>assembly guide</b> - start here if you have purchased a diy kit</summary>
+
+## interactive BOM for build guiding
+
+follow this link to view the [interactive BOM](https://htmlpreview.github.io/?https://github.com/cyberboy666/lateral_led_controller/blob/main/hardware/bom/ibom.html)
+
+## general solder advice
+
+- remember to heat pad first (2-3seconds), then add solder, then continue to heat (1-2seconds)
+
+- Checkout the web-comic [soldering is easy](https://mightyohm.com/files/soldercomic/FullSolderComic_EN.pdf) for more soldering advice
+
+## order of assembly
+
+- both the _WT32-ETH01_ controller and the _MP1584EN_5v_stepdown_ module can be soldered directly to the board using the castellated edges (if you would rather use pins/sockets this is fine also - just be aware you may need to use higher standoffs if also mounting a front panel) - these should be soldered before anything else
+
+- next i would solder the resistors, capictors (take note of direction), diodes, transistors etc
+
+- finally would finish with ic's and interface parts - sockets, buttons etc...
+
+## flashing the firmware
+
+
+
+</details>
+
+## operating guide
+  
+<details><summary><b>operating guide</b> - start here if you have purchased an assembled unit</summary>
+
+[diagram of the circuit with labels here]
+
+## access settings interface for first time
+
+- power on the circuit by plugging in a 5-12v dc supply into the POWER IN
+- using a computer / phone connect to the ACCESS_POINT created by the controller: default name `leds` pw `ledsleds` - you should see the blue _network connected_ led come on when you have connected to this network
+- in a browser go to `http://leds.local` (also try `http://192.168.4.1` if that doesnt work ) - you should now see the web interface!
+- from here you can set up which connection mode to use, see your controllers ip and also set which led protocol & layout to use - make sure the led settings (led type, number of data lines and number of leds per line ) reflect your installation setup.
+- for most installation settings it will be preferable to use wired ethernet connection to send data into this controller - make sure the IP/SUBMASK/GATEWAY settings reflect the ethernet settings being used on the computer this controller is connecting to. __auto assign ethernet connection__ worked from my linux machine but i could not get windows to assign an ip (act as dhcp) - maybe there is some setting or maybe it needs to be done manually from some operating systems such as windows.
+
+## reset button
+
+### soft reset
+
+on the controller board next to the `NETWORK CONNECTED` led is a `CONTROLLER RESET` button - pushing this will reboot the controller -> you should see the _network connected_ light go off for a momement while it resets
+
+### hard reset
+
+if you hold down the `CONTROLLER RESET` button for 5 seconds then release it you should see the `NETWORK CONNECTED` led flashing -> then short pressing the `CONTROLLER RESET` again from this mode will perform a __hard reset__ this means that the _NETWORK TYPE_ is reset back to __ACCESS_POINT__ and all settings are restored to default (you will need to connect to `leds` with pw `ledsleds` again to set up your controller)
+
+this can be helpful if you accidently put the controller into a state with network settings that you can not access the page any more.
+
+(if you get to the flashing led state but do not want to do a hard reset just power down the controller while flashing and your settings will not be wiped)
+
+
+</details>
+
+### more info
+
+<details><summary><b>how the circuit works</b></summary>
+  
+[coming soon]
+                                                                                                                             
+</details>
+
+<details><summary><b>contributing guide</b></summary>
+  
+if you would like to contribute back to these projects in some way but dont know how the best thing (for now) would be to reach out to me directly ( tim@cyberboy666.com or @cyberboy666 on scanlines forum) - i will be happy to help
+  
+</details>
+
+
+## credits & more info
+
+
+This circuit is distributed through UNDERSCORES – open video hardware label – visit [underscores.shop](https://underscores.shop) for more info
+
+The pcb was designed using KICAD , the booklet was created in LibreOffice Draw
+
+Everything from gerbers, cad files, panels and documentation is freely available online and distributed under CC-BY-SA / open-source licenses – help us contribute to the commons !
+
+Ask any questions or start discussions related to this project on the [scanlines.xyz](https://scanlines.xyz) forum – an online community space dedicated to diy av / electronic media art
+
+You can contact me directly at tim (at) cyberboy666 (dot) com 
+Please get in touch if you are interested in hosting a workshop !
+
+[image of the booklet back here]
+
+thanks to Tor for user testing + detailed feedback and suggestions + help with web interface design. thanks to the Lateral Movement Crew: Leo, Teesh, Wendy, Luke, Sean - for all the work into making these parties happen
+
+
+---
+
+known issues:
+
+_when WeMos_USB_to_SERIAL module is connected and controller is running there is a known bug where ethernet will not work unless the serial_monitor is open - this is due to ETH01 boards using same pin for ethernet clock and program_low IO0_
+
+
