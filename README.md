@@ -1,6 +1,91 @@
-# ethernet_led_controller
+# lateral_led_controller
 
-WIP
+### hardware network controller for addressable led installations 
+
+![image](https://github.com/user-attachments/assets/b56ed530-bede-486a-a84b-ba3950885025)
+
+- this circuit is distributed by __UNDERSCORES__ - _an open video hardware label_ : it is available to purchase - as a pcb, kit or assembled unit - at [underscores.shop](https://underscores.shop/lateral_led_controller/)
+- the schematic for the circuit can be found [here](/hardware/schematic.pdf)
+- the pcb gerber files for the lastest version can be found [here](/hardware/gerber_latest.zip)
+- interactive BOM is [here](https://htmlpreview.github.io/?https://github.com/cyberboy666/lateral_led_controller/blob/main/hardware/bom/ibom.html)
+- consider [donating](https://opencollective.com/underscores) to the underscores project to help us continue creating for the commons
+
+## description
+
+_lateral_led_controller_ is a hardware interface that converts [Art-Net](https://art-net.org.uk/), a network protocol for transmitting DMX data over network, into signals that drive addressable LEDs. it can be combined with mapping software (such as my [artnet_led_mapper](https://github.com/cyberboy666/artnet_led_mapper/)) to send arbitrary video onto an led strip canvas
+
+features include:
+
+- receives artnet data via ETHERNET, WIFI or ACCESS_POINT
+- natively drive addressable leds [WS281X](https://www.aliexpress.com/item/4001322411818.html) and [APA102](https://www.aliexpress.com/item/32322326979.html)
+- supports up to `8` parallel data outs and up to `12` DMX universes for max control over `2000` leds !
+- local web interface for easily configuring network / led settings
+- flexible dc power input - between 5v to 12v with low-heat / efficient on-board step-down converter
+- open source hardware and firmware - can be customized to meet your specific needs
+
+## background
+
+this controller is a companion to my [artnet_led_mapper](https://github.com/cyberboy666/artnet_led_mapper/) application that converts a video feed into artnet for addressable led strip installations. it was built for [lateral movement](https://cyberboy666.com/lateralmovement/) club nights such as seen here:
+
+![image](http://underscores.shop/wp-content/uploads/2024/06/leds.gif)
+
+
+you can find some more background on this install and process here: [WORKS IN PROGRESS 04 - talk about controlling addressable leds for art installation](https://videos.scanlines.xyz/w/p/tUhDfYqJJPfjovscNMvFRL) 
+
+## demo video
+
+[coming soon]
+
+## hardware options
+
+<details><summary>hardware options</summary>
+
+besides this controller there are some more bits of hardware you will need to realize an _addressable led installation_ - i will outline some suggestions here based on my experience but this will depend on your specific requirements - feel free to [email me](mailto:tim@cyberboy666.com) if you would like individual consulting on this.
+
+### led strips
+
+this controller is configured to support two types of addressable led strips (more can be added by firmware update):
+
+### __WS281X__
+
+ie [neopixels](https://www.adafruit.com/product/2541),  [WS2813 (5v) or WS2815 (12v)](https://www.aliexpress.com/item/4001322411818.html)
+
+- these strips are cheapest - around 5usd for 60/m on aliexpress
+- data to them is sent over a single wire (D) but is quite slow (around _800kbps_)
+- this means that a maximum of around 240 of these leds can be addressed in series before the refresh rate drops below 30fps
+- this controller is designed to be able to address up to 8 seperate WS281X led strips in parallel (outputs D0-D7 on board) for maximum 1920 number of leds in total
+
+
+![image](https://github.com/user-attachments/assets/fd99ba35-70c5-444a-bb6a-b914387d39c2)
+
+### __APA102__
+
+ie [dotstar](https://www.adafruit.com/product/2574) ,  [SK9822](https://www.aliexpress.com/item/32322326979.html)
+
+- these strips cost more - around 10usd for 60/m on aliexpress
+- data to them is sent over two wires : ( __D__ata and __C__lock ) but is _very fast_ - (around _24Mbps_ )
+- the controller is designed to address a single APA10 led strip by connecting D0 -> Data, D1 -> Clock
+- at those speeds there is no need to have parrallel outputs can easily address 2000 leds in series (may need to look into power injection tho)
+- they also claim to draw around 1/5 of the power as WS281X (i havnt tested this myself)
+
+![image](https://github.com/user-attachments/assets/4de6dc08-b744-477d-b597-58106c115f09)
+
+## power supply
+
+we ended up using a switching power supply [like this](https://www.aliexpress.com/item/1005002843829663.html) 
+
+- choose voltage based on your strip type (likely to be either 5v or 12v)
+- and then power based on the requirement for total number of leds you are using
+- you should power the _lateral_led_controller_ from the same supply thats powering the leds (its designed to safely take 5v - 12v input) or atleast ensure the GNDs are connected
+- take note on the recommended power wire thickness based on how much current is passing through it (if you use 12v strips then less current is required and therefore thinner wires)
+
+![image](https://github.com/user-attachments/assets/a14c4c9a-6c22-4981-a39e-36884a5f9992)
+
+</details>
+
+## software options
+
+---
 
 ## getting started:
 
@@ -65,27 +150,11 @@ this can be helpful if you accidently put the controller into a state with netwo
 
 ## addressing data to led strips
 
-this controller is configured to support two types of addressable led strips:
-
-### __WS281X__
-
-ie [neopixels](https://www.adafruit.com/product/2541),  [WS2813 (5v) or WS2815 (12v)](https://www.aliexpress.com/item/4001322411818.html)
-
-- these strips are cheapest - around 5usd for 60/m on aliexpress
-- data to them is sent over a single wire (D) but is quite slow (around _800kbps_)
-- this means that a maximum of around 240 of these leds can be addressed in series before the refresh rate drops below 30fps
-- this controller is designed to be able to address up to 8 seperate WS281X led strips in parallel (outputs D0-D7 on board) for maximum 1920 number of leds in total
 
 
-### __APA102__
 
-ie [dotstar](https://www.adafruit.com/product/2574) ,  [SK9822](https://www.aliexpress.com/item/32322326979.html)
 
-- these strips cost more - around 10usd for 60/m on aliexpress
-- data to them is sent over two wires : ( __D__ata and __C__lock ) but is _very fast_ - (around _24Mbps_ )
-- the controller is designed to address a single APA10 led strip by connecting D0 -> Data, D1 -> Clock
-- at those speeds there is no need to have parrallel outputs can easily address 2000 leds in series (may need to look into power injection tho)
-- they also claim to draw around 1/5 of the power as WS281X (i havnt tested this myself)
+
 
 from the settings page you can select the _led type_:
 
