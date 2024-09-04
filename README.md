@@ -87,6 +87,7 @@ for most installation settings it is prefered to use some kind of diffuser to he
 
 ## wiring and connectors
 
+
 the data lines from _lateral_led_controller_ uses Pluggable Screw Terminals - standard wire (22awg etc) can connect these lines from controller to the strip
 
 ![image](https://github.com/user-attachments/assets/4b82d6b9-e639-4413-a254-619010723e6c)
@@ -96,13 +97,24 @@ theres also the option to use cat5/6 cables to carry multiple data lines from th
 ![image](https://github.com/user-attachments/assets/211844cf-94b4-4366-baef-74deefd615ba)
 
 
-i like the idea of running power lines seperately (on [red+black paired wire](https://www.aliexpress.com/item/4000625095039.html) ) - and using [these kinds](https://www.aliexpress.com/item/1005004267277214.html) of barrel / screw connectors to easily plug in / unplug the installation
+personally i prefer running power lines seperately (on [red+black paired wire](https://www.aliexpress.com/item/4000625095039.html) ) - and using [these kinds](https://www.aliexpress.com/item/1005004267277214.html) of barrel / screw connectors to easily plug in / unplug from the installation
 
 ![image](https://github.com/user-attachments/assets/a575ffa4-9df2-4658-974c-fc0e0b74afea)
 
-most led strips come with these [SM JST 4](https://www.aliexpress.com/item/1005002516911742.html?) connectors pre-soldered to both ends. one option if you dont want to resolder wires / new connectors onto each strip would be to just get some extra of these and create breakouts 
+most led strips come with these [SM JST 4](https://www.aliexpress.com/item/1005002516911742.html?) connectors pre-soldered to both ends. one option if you dont want to resolder wires / new connectors onto each strip would be to just get some extra of these and create breakouts
 
 ![image](https://github.com/user-attachments/assets/95455f20-8f90-485b-b1c4-b9bf2ced58d4)
+
+
+### custom adapter boards
+
+i made two little pcb adatpers that may help you with format convertion also - see below for some examples of how you could wire them
+
+![image](https://github.com/user-attachments/assets/23ffb9b2-3eb2-40f2-93ea-8bda2d1dc31b)
+
+![image](https://github.com/user-attachments/assets/7045149a-8fe8-46df-9e44-41ffc32d59f9)
+
+![image](https://github.com/user-attachments/assets/27cdb41e-c229-4add-86df-b33254a3c030)
 
 
 </details>
