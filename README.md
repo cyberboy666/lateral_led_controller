@@ -222,6 +222,12 @@ follow this link to view the [interactive BOM](https://htmlpreview.github.io/?ht
 - from here you can set up which connection mode to use, see your controllers ip and also set which led protocol & layout to use - make sure the led settings (led type, number of data lines and number of leds per line ) reflect your installation setup.
 - for most installation settings it will be preferable to use wired ethernet connection to send data into this controller - make sure the IP/SUBMASK/GATEWAY settings reflect the ethernet settings being used on the computer this controller is connecting to. __auto assign ethernet connection__ worked from my linux machine but i could not get windows to assign an ip (act as dhcp) - maybe there is some setting or maybe it needs to be done manually from some operating systems such as windows.
 
+![image](https://github.com/user-attachments/assets/8b49bebf-3b1b-4bed-84be-f57d4eba3ade)
+
+![image](https://github.com/user-attachments/assets/c307ca27-7ae2-421c-893b-cc47e49fe88f)
+
+
+
 ## reset button
 
 ### soft reset
