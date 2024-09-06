@@ -229,8 +229,7 @@ follow this link to view the [interactive BOM](https://htmlpreview.github.io/?ht
 
 - finally would finish with ic's and interface parts - sockets, buttons etc...
 
-## flashing the firmware
-
+</details>
 
 ## firmware guide
 
