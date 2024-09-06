@@ -158,13 +158,41 @@ take a look at the [full_bom](/hardware/bom/full_bom.csv) for this project to se
 - __NOTE:__ the minimum value for resistors is 10, so you may need to modify these values to add to cart (or if they are already modified here you will need to see the  full_bom for actual part QTY) 
 
 - OPTIONAL: it is a good idea to add some dip-ic sockets and 2.54pin headers/sockets to your tayda order if you dont have them around already
-  
-## import into mouser
 
-- go to [mouser bom tool](https://nz.mouser.com/Bom/) and click _upload spreadsheet_
-- select the file [mouser_bom.csv](./hardware/bom/mouser_bom.csv) in this folder (you will have to download it first or clone this repo), then _upload my spreadsheet_ and _next_
-- ensure that __Mouser Part Number__ is selected in the dropdown above the first row, then _next_, _process_
-- if everything looks correct can now put _add to basket_
+## sourcing other parts
+
+this circuit has a few _specific_ parts that can not be sourced from tayda/mouser:
+
+### WT32-ETH01 micro-controller
+we are using a [WT32-ETH01](https://www.aliexpress.com/item/1005007279607510.html) ESP32 controller with the LAN8720A chip / ethernet port already attached - this is because it requires specific routing that is easier to get in a module like this - [heres](https://github.com/egnor/wt32-eth01) some more general info about this uC - it should be easy to find with a search on ali/amazon/ebay/etc - if you get it without header pins you can solder the controller straight on to the pcb (using the castellated edges) 
+
+![image](https://github.com/user-attachments/assets/6898c883-868a-46ce-b203-ca0a9fc6f7b0)
+
+### MP1584EN_5v_stepdown
+
+another pre-soldered module used in this circuit is this [MP1584EN_5v_stepdown]([MP1584EN_5v_stepdown](https://www.aliexpress.com/item/1005006005888518.html)) - 3A Step-down 5v
+
+its a useful module that allows a wide range of voltage inputs and is much more efficent than standard linear regulators (so producing less heat - which is important for installation work) - you can also solder the board directly onto our pcb with the castellated edges - take note of the direction indicated by arrow on bottom of module
+
+![image](https://github.com/user-attachments/assets/519af38c-6c49-4a2e-8758-ee4c2f00e200)
+
+### WeMos_CH340G_USB_to_SERIAL
+
+since the WT32-ETH01 doesnt have an on-board _usb-to-serial_ on the module for uploading firmware this board is designed to work with this [WeMos_CH340G_USB_to_SERIAL](https://www.aliexpress.com/item/1005006642575408.html) one - we are using this because it outputs the command signals that allow for auto-uploading (so we dont need to manually switch to boot mode every time) - you may need to join some pads with solder on the module to select DTS mode for it to work
+
+![image](https://github.com/user-attachments/assets/0647dc8c-2f8c-4b08-b302-41dc97b6437a)
+
+
+![Screenshot from 2024-09-06 13-56-25](https://github.com/user-attachments/assets/48900809-941f-4626-86d2-d2ff11dc5ee2)
+
+## terminal jacks
+
+the footprints on the pcb for the data line outputs are spaced for __3.5MM__
+
+- im using [KF2EDG RIGHT ANGLE 3.5MM PLUGGABLE](https://www.aliexpress.com/item/1005005511990041.html) terminals in my kits, but this is up to you - standard screw terminal (non-pluggable) like [this](https://www.aliexpress.com/item/1005001333343844.html) could also fit..
+
+![image](https://github.com/user-attachments/assets/8c9686a7-936e-47c8-957d-84c8a8925cf8)
+
 
 ## ordering pcbs
 
@@ -204,6 +232,29 @@ follow this link to view the [interactive BOM](https://htmlpreview.github.io/?ht
 ## flashing the firmware
 
 
+## firmware guide
+
+<details><summary><b>firmware guide</b> - for editing the code & flashing it to your micro-controller</summary>
+  
+## flashing firmware onto the micro-controller
+  
+if you have got a kit from the shop the default firmware will be pre-configured - still it could be useful to know how to update firmware / customize your controller.
+  
+### install guide
+  
+all _underscores_ projects with micro-controllers use [platformio](https://platformio.org/) with [visual studio code](https://code.visualstudio.com/) to edit, flash and monitor the code.
+  
+- first download (and unzip) the code in this repo - easiest is [as a zip](https://github.com/cyberboy666/lateral_led_controller/archive/refs/heads/main.zip) or you can clone using git if you are comfortable with this
+- next download, install and open [visual studio code](https://code.visualstudio.com/#alt-downloads)
+- now open the extension tab within vscode on left vertical menu (or press ctrl-shift-x) and search for `platformio` to install this extension
+  
+![image](https://user-images.githubusercontent.com/12017938/158495161-7c3114fc-814b-4acc-b142-4a9522370473.png)
+
+- connect the micro-controller to computer via usb with the __WeMos_CH340G_USB_to_SERIAL__ port, open the software folder of this project (ctrl-k ctrl-o) in vscode and find the _platformio_ commands (either in left vertical menu under _platformio_ or little tick/arrow symbols along bottom blue bar) - `PlatformIO: Upload` should flash the default code to your micro-controller
+  
+![image](https://user-images.githubusercontent.com/12017938/158495844-99466196-086a-47d2-b803-2b5941d33ac5.png)
+
+</details>
 
 </details>
 
@@ -211,7 +262,7 @@ follow this link to view the [interactive BOM](https://htmlpreview.github.io/?ht
   
 <details><summary><b>operating guide</b> - start here if you have purchased an assembled unit</summary>
 
-![image](https://github.com/user-attachments/assets/9b6dc6d6-f663-428f-ba4e-906b9d6d9f68)
+![image](https://github.com/user-attachments/assets/24260926-f897-4c14-985b-2637f945ce2b)
 
 
 ## access settings interface for first time
@@ -225,7 +276,6 @@ follow this link to view the [interactive BOM](https://htmlpreview.github.io/?ht
 ![image](https://github.com/user-attachments/assets/8b49bebf-3b1b-4bed-84be-f57d4eba3ade)
 
 ![image](https://github.com/user-attachments/assets/c307ca27-7ae2-421c-893b-cc47e49fe88f)
-
 
 
 ## reset button
@@ -278,12 +328,3 @@ Please get in touch if you are interested in hosting a workshop !
 
 
 thanks to Tor for user testing + detailed feedback and suggestions + help with web interface design. thanks to the Lateral Movement Crew: Leo, Teesh, Wendy, Luke, Sean - for all the work into making these parties happen
-
-
----
-
-known issues:
-
-_when WeMos_USB_to_SERIAL module is connected and controller is running there is a known bug where ethernet will not work unless the serial_monitor is open - this is due to ETH01 boards using same pin for ethernet clock and program_low IO0_
-
-
