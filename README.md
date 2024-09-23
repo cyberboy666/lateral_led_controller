@@ -34,7 +34,8 @@ you can find some more background on this install and process here: [WORKS IN PR
 
 ## demo video
 
-[coming soon]
+[![image](https://github.com/user-attachments/assets/14d344af-b4bb-4121-bbf2-6ed2f05d3b31)](https://videos.scanlines.xyz/w/2kwtY8TChY21LKqXwgELue)
+
 
 ## hardware options
 
