@@ -171,7 +171,7 @@ we are using a [WT32-ETH01](https://www.aliexpress.com/item/1005007279607510.htm
 
 ### MP1584EN_5v_stepdown
 
-another pre-soldered module used in this circuit is this [MP1584EN_5v_stepdown]([MP1584EN_5v_stepdown](https://www.aliexpress.com/item/1005006005888518.html)) - 3A Step-down 5v
+another pre-soldered module used in this circuit is this [MP1584EN_5v_stepdown](https://www.aliexpress.com/item/1005006005888518.html) - 3A Step-down 5v
 
 its a useful module that allows a wide range of voltage inputs and is much more efficent than standard linear regulators (so producing less heat - which is important for installation work) - you can also solder the board directly onto our pcb with the castellated edges - take note of the direction indicated by arrow on bottom of module
 
